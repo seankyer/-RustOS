@@ -5,6 +5,12 @@ An embedded Rust project
 
 Set up your minimal bare-metal Rust development environment for an ARM Cortex-M core using QEMU and `no_std`.
 
+## 0. Install Required Toolchains
+
+```bash
+sudo apt-get install binutils-arm-none-eabi gdb-multiarch
+```
+
 ## 1. Install Rust
 
 ```bash
@@ -24,22 +30,24 @@ rustc --version
 cargo --version
 ```
 
-## 2. Add the ARM Target
+## 2. Add required packages
+
+```bash
+rustup intsall nightly
+rustup default nightly
+rustup component add rust-src
+rustup component add rust-std
+```
+
+## 3. Add the ARM Target
 
 ```bash
 rustup target add thumbv7em-none-eabihf
 ```
 
-This target supports Cortex-M4/M7 with hardware floating point.
+This target supports Cortex-M4 with hardware floating point.
 
-## 3. Install Required Cargo Tools
-
-```bash
-cargo install cargo-binutils flip-link
-rustup component add llvm-tools-preview
-```
-
-## 4.: Install QEMU (Optional)
+## 4. Install QEMU (Optional)
 
 ```bash
 sudo apt update
@@ -65,5 +73,22 @@ cd rustos
 Run the rust build command:
 
 ```bash
-cargo build --release
+cargo build --release # Debug build not tested yet
 ```
+
+# Running µRustOS (QEMU)
+
+Once you've built µRustOS, you can run it on QEMU with GDB debugging server:
+
+```bash
+qemu-system-arm \
+  -machine lm3s6965evb \
+  -kernel target/thumbv7em-none-eabihf/release/rustos \
+  -S -gdb tcp::1234
+```
+
+# Guide
+
+Resources used:
+
+- https://os.phil-opp.com/freestanding-rust-binary/
