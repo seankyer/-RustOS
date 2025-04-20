@@ -1,5 +1,6 @@
 # µRustOS
-An embedded Rust project
+
+An embedded micro RustOS for baremetal
 
 # µRustOS Getting Started (ARM + QEMU)
 
@@ -73,7 +74,7 @@ cd rustos
 Run the rust build command:
 
 ```bash
-cargo build --release # Debug build not tested yet
+cargo build --release # Debug build not working yet
 ```
 
 # Running µRustOS (QEMU)
@@ -85,6 +86,22 @@ qemu-system-arm \
   -machine lm3s6965evb \
   -kernel target/thumbv7em-none-eabihf/release/rustos \
   -S -gdb tcp::1234
+```
+
+# Connecting Debugger to See Output
+
+You can then connect the debugger with `target extended-remote` to see hello-world
+
+```bash
+gdb-multiarch target/thumbv7em-none-eabihf/release/rustos -ex "target extended-remote :1234"
+```
+
+To see where the "Hello World!" message was printed:
+
+```bash
+c
+x/s 0x20000000
+> Hello World!
 ```
 
 # Guide
