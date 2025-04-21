@@ -1,46 +1,73 @@
+/* Linker script for lm3s6965evb running an ARM Cortex-M3 */
+
 ENTRY(reset_handler)
 
-MEMORY {
-    FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 512K
-    SRAM  (rw) : ORIGIN = 0x20000000, LENGTH = 128K
+MEMORY
+{
+    /* Define the memory regions available on the board */
+    FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x00040000   /* 256KB flash */
+    SRAM  (rw) : ORIGIN = 0x20000000, LENGTH = 0x00010000   /* 64KB SRAM */
 }
 
-SECTIONS {
-    /* Vector table goes at the start of FLASH (0x00000000) */
-    .vector_table : {
-        KEEP(*(.vector_table)) /* Keep so it's not stripped by linker GC */
+/* Define the stack size */
+STACK_SIZE = 0x1000;  /* 4KB stack */
+
+SECTIONS
+{
+    /* Vector table and interrupt handlers */
+    .vector_table :
+    {
+        . = ALIGN(4);
+        _vector_table_start = .;
+        KEEP(*(.vector_table)) /* Keep the vector table, no garbage collection */
+        _vector_table_end = .;
     } > FLASH
 
-    /* Code (text) */
-    .text : {
-        *(.text*)
-        *(.rodata*)
+    /* Text section for code */
+    .text :
+    {
+        . = ALIGN(4);
+        _text_start = .;
+        *(.text*) /* Collect all text/code sections */
+        *(.rodata*) /* Collect all read-only data */
+        . = ALIGN(4);
+        _text_end = .;
     } > FLASH
 
-    /* Initialized data: loaded from FLASH to SRAM */
-    .data : {
-        __data_start__ = .;
+    /* Read-Only Data */
+    .data : AT (_text_end)
+    {
+        _data_start = .;
         *(.data*)
-        __data_end__ = .;
-    } > SRAM AT > FLASH
-    __data_load__ = LOADADDR(.data);
-
-    /* Zero-initialized data */
-    .bss : {
-        __bss_start__ = .;
-        *(.bss*)
-        *(COMMON)
-        __bss_end__ = .;
+        . = ALIGN(4);
+        _data_end = .;
     } > SRAM
 
-    /* Heap */
-    .heap : {
-        *(.heap*)
+    /* Uninitialized data (.bss) */
+    .bss (NOLOAD) :
+    {
+        _bss_start = .;
+        *(.bss*)
+        . = ALIGN(4);
+        _bss_end = .;
     } > SRAM
 
     /* Stack */
-    .stack (NOLOAD) : {
+    .stack (NOLOAD) :
+    {
         . = ALIGN(8);
-        KEEP(*(.stack*))
+        _stack_start = .;
+        . += STACK_SIZE;
+        _stack_end = .;
     } > SRAM
+
+    .heap (NOLOAD) :
+    {
+        _heap_start = .;
+        . += 0x1000; /* 4KB heap */
+        _heap_end = .;
+    } > SRAM
+
+    /* Special sections for the linker */
+    .ARM.exidx : { *(.ARM.exidx*) } > SRAM
 }
